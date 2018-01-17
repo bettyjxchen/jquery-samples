@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>jQuery Warmup Template</title>
+    <!-- Bootstrap -->
+    <link href="/Content/bootstrap.css" rel="stylesheet" />
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <h1> Please Enter Your Information:</h1>
+
+    <form id="user-form">
+            <div class="form-group">
+                    <label>First Name:</label>
+                    <input name="First Name" type="text" class="form-control" id="first-name" placeholder="Enter Your First Name">
+                </div>
+            <div class="form-group">
+                    <label>Last Name:</label>
+                    <input name="Last Name" type="text" class="form-control" id="last-name" placeholder="Enter Your Last Name">
+                </div>
+            <div class="form-group">
+                    <label>Password:</label>
+                    <input name="Password" type="password" class="form-control" id="password" placeholder="Enter Your Password">
+                </div>
+            <div class="form-group">
+                    <label>Confirm Your Password:</label>
+                    <input name="Confirm Password" type="password" class="form-control" id="confirm-password" placeholder="Re-Enter Your Password">
+                </div>
+            <div class="form-group">
+                    <label>Email Address:</label>
+                    <input name="Email" type="email" class="form-control" id="email" placeholder="Enter Your Email Address">
+                </div>
+            <button type="button" id="create-user"> Submit Your Information  </button>
+            
+
+
+
+
+
+    </form>
+
+
+
+    
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/Scripts/jquery-3.1.1.min.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+
+    <script src="http://sabioapi2.azurewebsites.net/scripts/sabio.js"></script>  
+    <script src="/Scripts/jquery.validate.js"></script>
+    
+    <!-- All your code goes below here-->
+
+    <script type="text/javascript">
+
+sabio.page.startUp = function () {
+            // $.ajaxSetup({
+            //     headers: {
+            //         'SABIO-AUTH': "U6KHCQSTX"
+            //     }
+            // });
+
+        sabio.page.initializeValidation();
+        $("#create-user").on("click", sabio.page.handlers.createUser);
+}
+
+
+
+
+//-------------- HANDLERS -------------//
+
+sabio.page.handlers.createUser = function(){
+    if ($("#user-form").valid()){
+        var user = sabio.page.readForm();
+    sabio.page.createUser(user, sabio.page.onCreateUserSuccess, sabio.page.onErrorEmail);
+
+    }
+    
+}
+
+
+
+
+
+//------------- AJAX CALLS --------------//
+
+sabio.page.createUser = function (data, onSuccess, onError) {
+    
+                    var url = "http://pacoima-ypi.azurewebsites.net/api/users/register/employer";
+    
+                    var settings = {
+    
+                        cache: "false",
+                        data: data,
+                        dataType: "Json",
+                        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                        success: onSuccess,
+                        error: onError,
+                        type: "POST"
+                    }
+    
+                    $.ajax(url, settings);
+    
+                }
+
+
+
+
+
+
+//---------------- CALL BACK FUNCTIONS ------------------//
+
+sabio.page.onCreateUserSuccess = function(data){
+    console.log("Create User is Working!")
+    $("#user-form")[0].reset();
+    return window.alert("You are successfully registered!");
+}
+
+sabio.page.onErrorEmail = function (data){
+    console.log(data);
+    if (data.responseJSON.errors[0] === "User already exists."){
+        return window.alert("Email already exists")
+    }
+    else{
+
+    }
+
+    
+
+
+}
+
+
+
+
+
+//-------------------- OTHER FUNCTIONS ------------------//
+
+
+sabio.page.readForm = function (){
+    var user = {
+        "firstName": $("#first-name").val(),
+        "lastName": $("#last-name").val(),
+        "password": $("#password").val(),
+        "confirmPassword": $("#confirm-password").val(),
+        "email": $("#email").val()
+    }
+    return user;
+}
+
+
+
+
+
+
+//------------- J Query Validation ---------------- //
+
+sabio.page.initializeValidation = function () {
+    jQuery.validator.setDefaults({
+        debug: true
+    });
+
+                var validationRules = {
+                    "First Name": {
+                        required: true
+                    },
+                    "Last Name": {
+                        required: true
+                    },
+                    "Password":{
+                        required: true,
+                        minlength: 6,
+                        integer: true
+                    },
+                    "Confirm Password": {
+                        equalTo: "#password"
+                    },
+                    "Email": {
+                        required: true,
+                        email: true 
+                    }
+
+                }
+
+                    var validationMessage = {
+                    "First Name": {
+                        required: "Please Enter Your First Name"   
+                    },
+                    "Last Name": {
+                        required: "Please Enter Your Last Name"
+                    },
+                    "Password": {
+                        required: "Please enter your password",
+                        minlength: "Please enter at least 6 characters",
+                        integer: "Please enter at least one number"
+                    },
+                    "Confirm Password": {
+                        equalTo: "Must Match Password"
+                    },
+                    "Email": {
+                        required: "Please Enter Your Email",
+                        email: "Please Enter a valid email Address"
+                    }
+                    
+                }
+                var validationOptions = {
+                    rules: validationRules,
+                    messages: validationMessage
+                }
+                $("#user-form").validate(validationOptions);
+                
+            };
+
+    $.validator.addMethod( "integer", function( value, element ) {
+    return this.optional( element ) || /^(?=.*[0-9]).{6,}$/.test( value );
+    }, "include a positive or negative non-decimal number please" );
+
+
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>

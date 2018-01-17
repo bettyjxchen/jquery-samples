@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>FAQ</title>
+    <!-- Bootstrap -->
+    <link href="/Content/bootstrap.css" rel="stylesheet" />
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        .mainDiv {
+            padding: 50px 30px 50px 50px;
+        }
+        .pull-right {
+            margin-right: 0%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="mainDiv">
+        <!--Form-->
+        <div class="col-md-5">
+        <form id="frmFAQ">
+                <h3>FAQ<button id="btnGoToFAQ" type="button" class="btn btn-primary pull-right">Go To FAQ</button></h3>
+                <div class="form-group">
+                    <label for="Category">Category</label>
+                    <select class="selectCategory form-control" name="Category" class="form-control" data-style="btn">
+                            <option selected disabled hidden>Please select category</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="Question">Question</label>
+                    <textarea id="question" class="form-control" rows="3" name="Question" placeholder="Type Your Question"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="Answer">Answer</label>
+                    <textarea id="answer" name="Answer" class="form-control" rows="3" placeholder="Type Your Answer"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="Display Order">Display Order</label>
+                    <input id="displayOrder" name="Display Order" type="number" class="form-control" placeholder="#" />
+                </div>
+                <!--btnPostFAQ-->
+                <div class="form-group">
+                    <button id="btnPost" type="button" class="btn btn-primary">Post</button>
+                    <button id="btnEdit" type="button" class="btn btn-primary hidden">Edit</button>
+                </div>         
+        </form>
+        </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/Scripts/jquery-3.1.1.min.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+    <script src="http://sabioapi2.azurewebsites.net/scripts/sabio.js"></script>
+    <script src="/Scripts/jquery.validate.min.js"></script>
+   
+    <!-- All your code goes below here-->
+    <script type="text/javascript">
+        var url = window.location.href;
+        var urlSplit = url.split("=")[1];
+        var urlIsNum = /^[0-9]*$/.test(urlSplit);
+        console.log(urlSplit);
+        
+        sabio.page.startUp = function () {
+            console.log("startUp is firing");
+            var activeID = null;
+            
+            if (urlIsNum) {
+                sabio.page.getFAQByID(urlSplit, sabio.page.onGetFAQByIDSuccess, sabio.page.onError);
+            }
+
+            sabio.page.initializeValidation();
+            sabio.page.getCategories(sabio.page.onGetCategoriesSuccess, sabio.page.onError);
+
+            $("#btnPost").on("click", sabio.page.handlers.postFAQ);
+            $("#btnEdit").on("click", sabio.page.handlers.editFAQ);
+            $("#btnGoToFAQ").on("click", sabio.page.handlers.goToFAQ);
+        }
+
+        //------------------Handlers------------------//
+        sabio.page.handlers.postFAQ = function () {
+            if ($("#frmFAQ").valid()) {
+                var data = sabio.page.readForm();
+                sabio.page.postFAQ(data, sabio.page.onCreateFAQSuccess, sabio.page.onError);
+            }
+        }
+
+        sabio.page.handlers.editFAQ = function () {
+            if ($("#frmFAQ").valid()) {
+                var data = sabio.page.readForm();
+                if (urlSplit) {
+                    data.id=urlSplit;
+                }
+                else {
+                    data.id = activeID;
+                }
+                sabio.page.editFAQ(data, sabio.page.onEditFAQSuccess, sabio.page.onError);
+            }
+        }
+
+        sabio.page.handlers.goToFAQ = function () {
+            window.location.href="faq-index.html";
+        }
+
+        //--------------------AJAX--------------------//
+
+        sabio.page.getCategories = function (onSuccess, onError) {
+            var url = "https://pacoima-ypi.azurewebsites.net/api/faqCategories";
+
+            var settings = {
+                cache: "false",
+                dataType: "Json",
+                success: onSuccess,
+                error: onError,
+                type: "GET",
+                xhrFields: {
+                    withCredentials: true
+                }
+            };
+
+            $.ajax(url, settings);
+        }
+
+        sabio.page.postFAQ = function (data, onSuccess, onError) {
+            var url = "https://pacoima-ypi.azurewebsites.net/api/faqs";
+
+            var settings = {
+                cache: "false",
+                dataType: "Json",
+                data: data,
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                success: onSuccess,
+                error: onError,
+                type: "POST",
+                xhrFields: {
+                    withCredentials: true
+                }
+            };
+
+            $.ajax(url, settings);
+        }
+
+        sabio.page.editFAQ = function (data, onSuccess, onError) {
+            var url = "https://pacoima-ypi.azurewebsites.net/api/faqs/" + data.id;
+
+            var settings = {
+                cache: "false",
+                dataType: "Json",
+                data: data,
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                success: onSuccess,
+                error: onError,
+                type: "PUT",
+                xhrFields: {
+                    withCredentials: true
+                }
+            };
+
+            $.ajax(url, settings);
+        }
+
+        sabio.page.getFAQByID = function (id, onSuccess, onError) {
+            var url = "https://pacoima-ypi.azurewebsites.net/api/faqs/" + id;
+
+            var settings = {
+                cache: "false",
+                dataType: "Json",
+                success: onSuccess,
+                error: onError,
+                type: "GET",
+                xhrFields: {
+                    withCredentials: true
+                }
+            };
+
+            $.ajax(url, settings);
+        }
+
+        //------------------Callback------------------//
+
+        sabio.page.onGetCategoriesSuccess = function (data, statusText, xhr) {
+            console.log("AJAX Get Categories Success");
+            console.log("Here is data");
+            console.log(data);
+            console.log("Here is statusText");
+            console.log(statusText);
+            console.log("Here is xhr");
+            console.log(xhr);
+            sabio.page.populateSelect(data.items);
+        }
+
+        sabio.page.onCreateFAQSuccess = function (data, statusText, xhr) {
+            console.log(statusText);
+            $("#btnEdit").removeClass("hidden");
+            $("#btnPost").addClass("hidden");
+            activeID = data.item;
+            alert("Post Success");
+        }
+
+        sabio.page.onEditFAQSuccess = function (data, statusText, xhr) {
+            console.log(statusText);
+            $("#btnEdit").addClass("hidden");
+            $("#btnPost").removeClass("hidden");
+            alert("Edit Success");
+            sabio.page.clearForm();
+            urlSplit = null;
+        }
+
+        sabio.page.onGetFAQByIDSuccess = function (data, statusText, xhr) {
+            console.log("Here is data");
+            console.log(data);
+            console.log("Here is statusText");
+            console.log(statusText);
+            console.log("Here is xhr");
+            console.log(xhr);
+            
+            sabio.page.populateForm(data.item);
+            $("#btnEdit").removeClass("hidden");
+            $("#btnPost").addClass("hidden");
+
+        }
+
+        sabio.page.onError = function (xhr, statusText, errorThrown) {
+            console.log("Here is error xhr");
+            console.log(xhr);
+            console.log("Here is error statusText");
+            console.log(statusText);
+            console.log("Here is errorThrown");
+            console.log(errorThrown);
+        }
+
+        //------------------Functions-----------------//
+
+        sabio.page.populateSelect = function (data) {
+            for (var i = 0; i < data.length; i++) {
+                //tedious way
+                //$("select").append("<option value='" + data[i].name + "' id='" + data[i].id + "'>" + data[i].name + "</option>");
+              
+                $("<option/>", {
+                    value: data[i].name,
+                    text: data[i].name,
+                    id: data[i].id
+                }).appendTo("select");
+            }
+        }
+
+        sabio.page.initializeValidation = function () {
+            jQuery.validator.setDefaults({
+                debug: true
+            });
+
+            var validationRules = {
+                "Category": {
+                    required: true,
+                },
+
+                "Question": {
+                    required: true,
+                },
+
+                "Answer": {
+                    required: true,
+                },
+
+                "Display Order": {
+                    required: true,
+                    digits: true
+                }
+            }
+
+            var validationMessages = {
+                required: "This field is required",
+                digits: "Please enter a number"
+            }
+
+            var validationOptions = {
+                rules: validationRules,
+                messages: validationMessages
+            }
+
+            $("#frmFAQ").validate(validationOptions);
+        }
+
+        sabio.page.readForm = function () {
+            var data = {
+                category: $(".selectCategory").val(),
+                question: $("#question").val(),
+                answer: $("#answer").val(),
+                displayOrder: $("#displayOrder").val(),
+            }
+            // data.FaqCategoryId = $(".selectCategory").attr("id");
+            data.FaqCategoryId = $(".selectCategory option:selected").attr("id");
+            return data;
+        }
+
+        sabio.page.clearForm = function () {
+            $("#frmFAQ")[0].reset();
+        }
+
+        sabio.page.populateForm = function (data) {
+            $(".selectCategory").val(data.category).change();
+            $("#question").val(data.question);
+            $("#answer").val(data.answer);
+            $("#displayOrder").val(data.displayOrder);
+        }
+
+    </script>
+
+
+</body>
+
+</html>

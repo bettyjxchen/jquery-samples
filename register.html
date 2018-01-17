@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Register</title>
+    <!-- Bootstrap -->
+    <link href="/Content/bootstrap.css" rel="stylesheet" />
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        .mainDiv {
+            padding: 50px 30px 50px 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mainDiv">
+        <!--Form-->
+        <form id="frmUser">
+            <div class="col-md-10">
+                <h3>Register Here</h3>
+                <div class="form-group">
+                    <label for="First Name">First Name</label>
+                    <input id="firstName" name="First Name" type="text" class="form-control" placeholder="Enter First Name">
+                </div>
+                <div class="form-group">
+                    <label for="Last Name">Last Name</label>
+                    <input id="lastName" name="Last Name" type="text" class="form-control" placeholder="Enter Last Name">
+                </div>
+                <div class="form-group">
+                    <label for="Password">Password</label>
+                    <input id="password" name="Password" type="password" class="form-control" placeholder="Enter Password">
+                </div>
+                <div class="form-group">
+                    <label for="Confirm Password">Confirm Password</label>
+                    <input id="confirmPassword" name="Confirm Password" type="password" class="form-control" placeholder="Enter Password Again">
+                </div>
+                <div class="form-group">
+                    <label for="Email">Email</label>
+                    <input id="email" name="Email" type="email" class="form-control" placeholder="Enter Email">
+                </div>
+                <!--btnCreateUser-->
+                <div class="form-group">
+                    <button id="btnCreateUser" type="button" class="btn btn-success">Create User</button>
+                    <span>Already have an account? <a href="login.html">Login.</a></span>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/Scripts/jquery-3.1.1.min.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+    <script src="http://sabioapi2.azurewebsites.net/scripts/sabio.js"></script>
+    <script src="/Scripts/jquery.validate.min.js"></script>
+    <script src="/Scripts/ajax-calls.js"></script>
+    
+
+    <!-- All your code goes below here-->
+    <script type="text/javascript">
+        sabio.page = {
+            urlRegister: "https://pacoima-ypi.azurewebsites.net/api/users/register/employer",
+        }
+        
+        sabio.page.startUp = function () {
+            /*$.ajaxSetup({
+                headers: {
+                    "SABIO-AUTH": "U6KDF739Q"
+                }
+            });*/
+
+            console.log("startUp is firing");
+            sabio.page.initializeValidation();
+
+            $("#btnCreateUser").on("click", sabio.page.handlers.createUser);
+        }
+
+        //------------------Handlers------------------//
+
+        sabio.page.handlers.createUser = function () {
+            if ($("#frmUser").valid()) {
+                var data = sabio.page.readForm();
+                //sabio.page.createUser(data, sabio.page.onCreateUserSuccess, sabio.page.onError);
+                sabio.page.ajax(sabio.page.urlRegister, sabio.page.onCreateUserSuccess, sabio.page.onError, "POST", null, data)
+            }
+        }
+
+        //--------------------AJAX--------------------//
+
+        sabio.page.createUser = function (data, onSuccess, onError) {
+            var url = "https://pacoima-ypi.azurewebsites.net/api/users/register/employer";
+
+            var settings = {
+                cache: "false",
+                dataType: "Json",
+                data: data,
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                success: onSuccess,
+                error: onError,
+                type: "POST",
+                xhrFields: {
+                    withCredentials: true
+                }
+            };
+
+            $.ajax(url, settings);
+        }
+
+        //------------------Callback------------------//
+
+        sabio.page.onCreateUserSuccess = function (data, textStatus, xhr) {
+            console.log("AJAX POST SUCCESS");
+            sabio.page.clearForm();
+            alert("You may now login");
+            window.location.href = "login.html";
+        }
+
+        sabio.page.onError = function (xhr, textStatus, errorThrown) {
+            console.log(xhr);
+            console.log(textStatus);
+            console.log(errorThrown);
+            sabio.page.clearForm();
+
+            if (xhr.responseJSON.errors[0] == "User already exists.") {
+                alert("Email is already in use");
+            }
+        }
+
+        //------------------Functions------------------//
+
+        jQuery.validator.addMethod("regexPassword", function (value, element) {
+            return this.optional(element) || /^(?=.*[0-9]).{6,}$/.test(value);
+        });
+
+        sabio.page.initializeValidation = function () {
+            jQuery.validator.setDefaults({
+                debug: true
+            });
+
+            var validationRules = {
+                "First Name": {
+                    required: true,
+                },
+
+                "Last Name": {
+                    required: true,
+                },
+
+                "Password": {
+                    required: true,
+                    //minlength: 6,
+                    regexPassword: /^(?=.*[0-9]).{6,}$/,
+                },
+
+                "Confirm Password": {
+                    required: true,
+                    equalTo: "#password" //link to jquery
+                },
+
+                "Email": {
+                    required: true,
+                    email: true
+                }
+            }
+
+            var validationMessages = {
+                "First Name": {
+                    required: "This field is required",
+                },
+
+                "Last Name": {
+                    required: "This field is required",
+                },
+
+                "Password": {
+                    required: "This field is required",
+                    regexPassword: "Password must be 6 characters and contain 1 number"
+                },
+
+                "Confirm Password": {
+                    required: "This field is required",
+                    equalTo: "Password must be the same"
+                },
+
+                "Email": {
+                    required: "This field is required",
+                    email: "Enter valid email"
+                }
+            }
+
+            var validationOptions = {
+                rules: validationRules,
+                messages: validationMessages
+            }
+
+            $("#frmUser").validate(validationOptions);
+        }
+
+        sabio.page.readForm = function () {
+            var data = {
+                firstName: $("#firstName").val(),
+                lastName: $("#lastName").val(),
+                email: $("#email").val(),
+                password: $("#password").val(),
+            }
+            return data;
+        }
+
+        sabio.page.clearForm = function () {
+            $("#frmUser")[0].reset();
+            $("#administrator").attr("checked", false);
+        }
+        
+    </script>
+
+</body>
+
+</html>
